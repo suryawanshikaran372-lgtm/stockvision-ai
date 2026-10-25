@@ -1,49 +1,24 @@
-# StockVision AI — ₹0 Public Beta
+# StockVision AI V2 (zero-budget static research tool)
 
-A real deployable, **static** financial-analysis website for GitHub Pages. No paid API, server, database, user account or AI service required. Source code is MIT-style usable by the owner; no external market dataset redistribution is bundled.
+## What works
+- Search India NSE and US NASDAQ/NYSE company directories (best-effort; incomplete coverage possible).
+- Company profile with source link; optional dated price snapshot; no fabricated live prices.
+- Local-only financial CSV import and Revenue CAGR, Profit CAGR, ROE, P/E, Debt/Equity calculations.
+- GitHub Actions refreshes public symbol directories daily (best effort).
 
-## Features
-- Responsive English/Marathi interface, sample fictional company, browser CSV import.
-- Revenue / profit CAGR, profit YoY, ROE, EPS, manual-price P/E, debt/equity, operating cash flow, free cash flow.
-- Rule-based risk observations, SVG history chart, year-by-year source links.
-- Local-only import (no upload), input validation, HTTPS source URL enforcement, no `innerHTML` injection.
-- Tests and GitHub Pages deployment workflow.
+## Deploy to existing GitHub Pages repository
+1. Back up the existing repository. Upload **contents of this ZIP** to repository root (not the containing folder). Merge with existing files; ensure `index.html`, `app.js`, `scripts/`, `data/`, `.github/workflows/deploy.yml` are in root.
+2. In Settings > Pages, choose GitHub Actions.
+3. In `.github/workflows/`, **disable/delete old `static.yml` and `jekyll-docker.yml` workflows** so only `deploy.yml` publishes Pages. Prefer a separate branch/backup first.
+4. Commit. Actions > StockVision V2 Deploy > Run workflow if needed.
+5. When green, open `https://USERNAME.github.io/REPO/`.
 
-## Run locally
-Requires Python 3 or Node.js 20+.
+## Data sources and limits
+- US symbol lists: NASDAQ Trader official directories, refreshed periodically. These include exchange-listed securities, not necessarily every operating company.
+- India NSE: NSE archived equity CSV; can fail due to network restrictions. BSE-only stocks are **not** covered.
+- No real-time or delayed price feed is included. `data/quotes.json` is intentionally empty until an authorized provider supplies data with display rights. Quote object example: `{"quotes":{"US:AAPL":{"price":123.45,"currency":"$","asof":"2026-10-25T15:00:00Z","provider":"Licensed feed"}}}`. Only publish quotes if licensing permits redistribution.
+- No paid AI model, automated financial-statement ingestion, or investment recommendations. Financials are supplied by users in CSV. Financial ratios assume consistent units; simplified ROE uses ending equity.
+- Upstream data may be stale, partial or inaccessible; scheduled Actions are best effort and may be delayed.
 
-```bash
-python -m http.server 8000 --directory site
-# open http://localhost:8000
-```
-
-To test:
-```bash
-npm test
-```
-
-## Publish free on GitHub Pages
-1. Create a **public GitHub repository** (e.g. `stockvision-ai`).
-2. Upload **all files and folders** in this project, including `.github/workflows/deploy.yml`, to the repository's `main` branch.
-3. In repository **Settings → Pages**, choose **GitHub Actions** as build/deployment source.
-4. Open **Actions** and confirm the deploy workflow succeeded. Site URL will typically be `https://YOUR-USERNAME.github.io/stockvision-ai/`.
-5. Replace `site/data/DEMO.csv` or add other **licensed or permission-cleared** CSVs. The default selector includes DEMO only; adding multiple preset companies requires editing `site/index.html` and loading the matching path in `site/app.js`. Users can already import any properly formatted CSV locally.
-
-## Data contract
-`year,revenue,profit,debt,equity,operating_cash_flow,capex,shares,source_url`
-All financial amounts are **₹ crore**, shares are **crore shares**; one source URL per financial year. At least two years, max 30, positive equity and shares, and HTTPS URLs. Use **consistent annual consolidated vs standalone basis**. User is responsible for source accuracy, restatements, stock splits, units, and permissions.
-
-## What this is NOT
-- No live stock quotes, licensed market feed, automatic company data collection, real AI model, fair value, ROCE, buy/sell calls, login, user storage, or automatic IPO updates.
-- `DEMO` is fictional and must never be mistaken for a real listed company.
-- This is an **educational beta**, not verified financial advice or SEBI-registered research.
-
-## Public launch checklist
-- Obtain rights to distribute any datasets or market prices; do not scrape/republish third-party commercial data without permission.
-- Add contact details, privacy notice, terms and limitations before broad promotion; if adding analytics/cookies, disclose appropriately.
-- Have an India-qualified compliance professional review any future paid stock research, buy/sell ratings, personalized advice or subscriptions.
-- Verify all financial numbers and data freshness; identify original exchange filings and correction procedures.
-- For real AI, use a **server-side** API gateway and usage limits. Never embed an OpenAI API key in browser code or a public repository.
-
-## Why static hosting?
-GitHub Pages hosts static sites at zero incremental infrastructure cost for eligible repositories, subject to GitHub's limits and terms. This is a real public website, not a promise of free unlimited financial-data APIs or AI inference. GitHub Pages suitability for a commercial SaaS should be rechecked before monetization.
+## Testing
+`python3 scripts/update_directory.py` to refresh symbol list when network access is available. Run `python3 -m http.server 8000` in this folder and open http://localhost:8000/.
