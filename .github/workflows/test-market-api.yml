@@ -1,0 +1,54 @@
+
+name: Test Market API
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Twelve Data connection
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os
+          import json
+          import urllib.parse
+          import urllib.request
+
+          key = os.environ.get("TWELVE_DATA_API_KEY")
+          if not key:
+              raise SystemExit("ERROR: API secret missing")
+
+          params = urllib.parse.urlencode({
+              "symbol": "AAPL",
+              "apikey": key
+          })
+          url = "https://api.twelvedata.com/quote?" + params
+
+          try:
+              with urllib.request.urlopen(url, timeout=20) as response:
+                  data = json.load(response)
+          except Exception as exc:
+              raise SystemExit(
+                  "ERROR: API request failed: " + str(exc)
+              )
+
+          if data.get("status") == "error" or "close" not in data:
+              raise SystemExit(
+                  "ERROR: API access denied or invalid response: "
+                  + str(data.get("message", "No quote returned"))
+              )
+
+          print("SUCCESS: Twelve Data API connected")
+          print("Symbol:", data.get("symbol"))
+          print("Exchange:", data.get("exchange"))
+          print("Currency:", data.get("currency"))
+          print("Quote fields available: YES")
+          print("No market prices published")
+          PY
